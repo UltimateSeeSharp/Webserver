@@ -9,10 +9,14 @@
 
   <ItemGroup>
     <None Remove="Webspace\index.html" />
+    <None Remove="Webspace\test.html" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="Webspace\index.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Webspace\test.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
