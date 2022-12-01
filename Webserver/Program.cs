@@ -13,7 +13,7 @@ static class Program
     static TcpListener? _listener;
     static NetworkStream _clientStream;
 
-    static readonly string _serverName = "DaveServer v1.0";
+    static readonly string _serverName = "KathiServer v1.0";
 
     static async Task Main()
     {
@@ -38,12 +38,15 @@ static class Program
         byte[] buffer = new byte[_client.ReceiveBufferSize];
 
         _clientStream = _client.GetStream();
+        _clientStream.Read(buffer, 0, buffer.Length);
+
         message = String.Concat(message, Encoding.ASCII.GetString(buffer, 0, buffer.Length));
+        var split = message.Split("\r\n");
 
         StringBuilder stringBuilder = new();
         buffer.ToList().ForEach(b => stringBuilder.Append((char)b));
 
-        var headerItems = stringBuilder.ToString().Split("\n\r");
+        var headerItems = stringBuilder.ToString().Split();
 
         RequestStruct requestStruct = new();
         requestStruct.HttpMethod = headerItems[0];
@@ -96,6 +99,6 @@ static class Program
         //  Send body
         string bodyContent = File.ReadAllText("Webspace\\index.html");
         byte[] responseBodyBytes = Encoding.ASCII.GetBytes(bodyContent);
-        _clientStream.Write()
+        _clientStream.Write(responseBodyBytes, 0, responseBodyBytes.Length);
     }
 }
