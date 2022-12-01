@@ -8,11 +8,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Webspace\favicon.ico" />
     <None Remove="Webspace\index.html" />
     <None Remove="Webspace\test.html" />
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="Webspace\favicon.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Webspace\index.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

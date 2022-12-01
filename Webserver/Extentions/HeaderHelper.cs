@@ -19,9 +19,15 @@ internal static class HeaderHelper
 
         requestStruct.HttpMethod = firstLineSplit[0];
         requestStruct.RequestPath = firstLineSplit[1];
+        
+        //  Default path index.html
+        if (requestStruct.RequestPath == "/")
+            requestStruct.RequestPath = "index.html";
+
         requestStruct.HttpVersion = firstLineSplit[2];
         requestStruct.Host = headerLines[1].Split(": ")[1];
 
+        //  Save each header statement
         foreach (var item in headerLines.Skip(2).ToList())
         {
             var split = item.Split(':');
@@ -50,9 +56,11 @@ internal static class HeaderHelper
         response.HeaderEntries.Add("Server", serverName);
         response.HeaderEntries.Add("Date", DateTime.Now.ToString("r"));
 
+        //  Create header string
         String responseHeader = String.Empty;
         responseHeader += response.HttpVersion + " " + response.StatusCode + " " + "OK" + "\n";
 
+        //  Write header items to header string
         foreach (DictionaryEntry headerItem in response.HeaderEntries)
         {
             responseHeader += headerItem.Key + ": " + headerItem.Value + "\n";

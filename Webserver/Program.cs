@@ -13,7 +13,7 @@ static class Program
 {
     static TcpClient? _client;
     static TcpListener? _listener;
-    static NetworkStream? _clientStream;
+    static NetworkStream _clientStream;
 
     static readonly string _serverName = "Server v1.0";
 
@@ -65,12 +65,12 @@ static class Program
 
         //  Send header
         byte[] responseHeaderBytes = Encoding.ASCII.GetBytes(responseHeader);
-        _clientStream.Write(responseHeaderBytes, 0, responseHeaderBytes.Length);
+        await _clientStream.WriteAsync(responseHeaderBytes, 0, responseHeaderBytes.Length);
 
         //  Send body
         string bodyContent = File.ReadAllText("Webspace\\" + request.RequestPath);
         byte[] responseBodyBytes = Encoding.ASCII.GetBytes(bodyContent);
-        _clientStream.Write(responseBodyBytes, 0, responseBodyBytes.Length);
+        await _clientStream.WriteAsync(responseBodyBytes, 0, responseBodyBytes.Length);
 
         _clientStream.Close();
     }
