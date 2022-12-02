@@ -4,9 +4,9 @@ using Webserver.Model;
 
 namespace Webserver.Extentions;
 
-internal static class HeaderHelper
+internal class HeaderService
 {
-    internal static RequestStruct ParseHeader(byte[] headerBuffer)
+    internal RequestStruct ParseHeader(byte[] headerBuffer)
     {
         String message = Encoding.ASCII.GetString(headerBuffer, 0, headerBuffer.Length);
         var headerLines = message.Split("\r\n");
@@ -47,7 +47,7 @@ internal static class HeaderHelper
         return requestStruct;
     }
 
-    internal static string CreateResponseHeader(string serverName)
+    internal string CreateResponseHeader(string serverName)
     {
         ResponseStruct response = new();
         response.StatusCode = 200;
