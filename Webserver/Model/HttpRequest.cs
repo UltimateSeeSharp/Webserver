@@ -10,10 +10,3 @@ internal struct RequestStruct
     public string HttpVersion;
     public Hashtable Headers;
 }
-
-internal struct ResponseStruct
-{
-    public int StatusCode;
-    public string HttpVersion;
-    public Hashtable HeaderEntries;
-}
