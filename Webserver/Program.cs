@@ -17,19 +17,23 @@ static class Program
     {
         Bootstrapper.Start();
 
+        //  Open Port for connection
         _listener = new(8000);
         _listener.Start();
 
         while (true)
         {
+            //  Wait for incomming requests
             await HandleRequest();
         }
     }
 
     static async Task HandleRequest()
     {
+        //  Save client which made request
         TcpClient client = await _listener!.AcceptTcpClientAsync();
 
+        //  Create handler for processing incomming request
         ClientHandler clientHandler = new ClientHandler(_serverName);
         Task.Factory.StartNew(() => clientHandler.ProcessRequest(client));
     }

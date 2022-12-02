@@ -9,6 +9,7 @@ internal class StreamService
 
     internal async Task SendHeader(NetworkStream networkStream, string serverName)
     {
+        //  Create and send header over network stream (derived from tcpClient)
         string headerString = _headerService.CreateResponseHeader(serverName);
         byte[] headerBytes = Encoding.ASCII.GetBytes(headerString);
         await networkStream.WriteAsync(headerBytes, 0, headerBytes.Length);

@@ -8,5 +8,7 @@ internal struct RequestStruct
     public string RequestPath;
     public string Host;
     public string HttpVersion;
+
+    //  Saves all header items like compression-type, age, ...
     public Hashtable Headers;
 }

@@ -21,29 +21,39 @@ public class ClientHandler
         if (tcpClient is null)
             throw new NullReferenceException("No Client found to process request.");
 
+        //  Get data stream from request transmission
         NetworkStream networkStream = tcpClient.GetStream();
 
+        //  Read data from stream
         byte[] buffer = new byte[tcpClient.ReceiveBufferSize];
         networkStream.Read(buffer, 0, buffer.Length);
 
+        //  Parse stram data to request struct
         RequestStruct request = _headerService.ParseHeader(buffer);
+
+        //  Process data from parsed request struct
         await ProcessRequest(request, networkStream);
     }
 
     async Task ProcessGET(RequestStruct request, NetworkStream networkStream)
     {
+        //  Send generic http response header
         await _streamService.SendHeader(networkStream, _serverName);
 
-        //  Send body
+        //  Get requested file from http server
         string bodyContent = File.ReadAllText("Webspace\\" + request.RequestPath);
+
+        //  Convert requested file to bytes and send over stream
         byte[] bodyBytes = Encoding.ASCII.GetBytes(bodyContent);
         await networkStream.WriteAsync(bodyBytes, 0, bodyBytes.Length);
 
+        //  Close stream and singal transmission end
         networkStream.Close();
     }
 
     async Task ProcessHEAD(NetworkStream networkStream)
     {
+        //  Send header => HEAD method => without body
         await _streamService.SendHeader(networkStream, _serverName);
     }
 
