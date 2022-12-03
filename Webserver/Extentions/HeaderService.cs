@@ -1,4 +1,6 @@
-﻿using System.Collections;
+﻿using Newtonsoft.Json;
+using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using Webserver.Model;
 
@@ -6,12 +8,12 @@ namespace Webserver.Extentions;
 
 internal class HeaderService
 {
-    internal RequestStruct ParseHeader(byte[] headerBuffer)
+    internal RequestStruct ParseRequest(byte[] headerBuffer)
     {
         String message = Encoding.ASCII.GetString(headerBuffer, 0, headerBuffer.Length);
-        var headerLines = message.Split("\r\n");
+        var requestLines = message.Split("\r\n");
 
-        var firstLine = headerLines[0];
+        var firstLine = requestLines[0];
         var firstLineSplit = firstLine.Split(" ");
 
         RequestStruct requestStruct = new();
@@ -25,12 +27,20 @@ internal class HeaderService
             requestStruct.RequestPath = "index.html";
 
         requestStruct.HttpVersion = firstLineSplit[2];
-        requestStruct.Host = headerLines[1].Split(": ")[1];
+        requestStruct.Host = requestLines[1].Split(": ")[1];
 
         //  Save each header statement
-        foreach (var item in headerLines.Skip(2).ToList())
+        int headerBodySeperationIndex = 0;        
+        foreach (var headerItem in requestLines.Skip(2).ToList())
         {
-            var split = item.Split(':');
+            //  Body beginning => stop adding to header hashtable
+            if (headerItem == String.Empty)
+            {
+                headerBodySeperationIndex = requestLines.ToList().IndexOf(headerItem);
+                break;
+            }
+
+            var split = headerItem.Split(':');
 
             var key = split[0];
             var value = String.Empty;
@@ -42,6 +52,14 @@ internal class HeaderService
                 continue;
 
             requestStruct.Headers.Add(key, value);
+        }
+
+        //  Save each json in body
+        foreach (var bodyItem in requestLines.Skip(headerBodySeperationIndex + 1).ToList())
+        {
+            var test = bodyItem;
+            var anonym = JsonConvert.DeserializeObject(test);
+            Product product = JsonConvert.DeserializeObject<Product>(test);
         }
 
         return requestStruct;

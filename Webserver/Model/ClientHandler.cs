@@ -1,9 +1,8 @@
 ﻿using System.Net.Sockets;
 using System.Text;
 using Webserver.Extentions;
-using Webserver.Model;
 
-namespace Webserver;
+namespace Webserver.Model;
 
 public class ClientHandler
 {
@@ -29,7 +28,7 @@ public class ClientHandler
         networkStream.Read(buffer, 0, buffer.Length);
 
         //  Parse stram data to request struct
-        RequestStruct request = _headerService.ParseHeader(buffer);
+        RequestStruct request = _headerService.ParseRequest(buffer);
 
         //  Process data from parsed request struct
         await ProcessRequest(request, networkStream);
@@ -57,6 +56,12 @@ public class ClientHandler
         await _streamService.SendHeader(networkStream, _serverName);
     }
 
+    async Task ProcessPOST(RequestStruct request, NetworkStream networkStream)
+    {
+        byte[] buffer = new byte[networkStream.Length];
+        var test = networkStream.Read(buffer, 0, buffer.Length);
+        //String message = Encoding.ASCII.GetString(headerBuffer, 0, headerBuffer.Length);
+    }
 
     async Task ProcessRequest(RequestStruct request, NetworkStream networkStream)
     {
@@ -67,7 +72,11 @@ public class ClientHandler
                 break;
 
             case "HEAD":
-                await ProcessHEAD(networkStream);    
+                await ProcessHEAD(networkStream);
+                break;
+
+            case "POST":
+                await ProcessPOST(request, networkStream);
                 break;
 
             default: throw new NotImplementedException("HTTP Method not implemented.");
