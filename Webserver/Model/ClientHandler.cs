@@ -1,4 +1,7 @@
-﻿using System.Net.Sockets;
+﻿using Microsoft.EntityFrameworkCore.Diagnostics;
+using Newtonsoft.Json;
+using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using Webserver.Extentions;
 
@@ -8,6 +11,8 @@ public class ClientHandler
 {
     private readonly StreamService _streamService = Bootstrapper.Resolve<StreamService>();
     private readonly HeaderService _headerService = Bootstrapper.Resolve<HeaderService>();
+    private readonly BodyParserService _jsonBodyParser = Bootstrapper.Resolve<BodyParserService>();
+    private readonly DbService _dbService = Bootstrapper.Resolve<DbService>();
     private readonly string _serverName;
 
     public ClientHandler(string serverName)
@@ -31,39 +36,79 @@ public class ClientHandler
         RequestStruct request = _headerService.ParseRequest(buffer);
 
         //  Process data from parsed request struct
-        await ProcessRequest(request, networkStream);
+        await ManageRequestMethod(request, networkStream);
     }
 
     async Task ProcessGET(RequestStruct request, NetworkStream networkStream)
     {
         //  Send generic http response header
-        await _streamService.SendHeader(networkStream, _serverName);
+        await _streamService.SendHeader(networkStream, _serverName, HttpStatusCode.OK);
 
         //  Get requested file from http server
-        string bodyContent = File.ReadAllText("Webspace\\" + request.RequestPath);
+        string bodyContent = String.Empty;
+
+        if (request.RequestPath == "/Products")
+            bodyContent = JsonConvert.SerializeObject(_dbService.Products.ToList());
+        else
+            bodyContent = File.ReadAllText("Webspace\\" + request.RequestPath);
 
         //  Convert requested file to bytes and send over stream
         byte[] bodyBytes = Encoding.ASCII.GetBytes(bodyContent);
         await networkStream.WriteAsync(bodyBytes, 0, bodyBytes.Length);
-
-        //  Close stream and singal transmission end
-        networkStream.Close();
     }
 
     async Task ProcessHEAD(NetworkStream networkStream)
     {
         //  Send header => HEAD method => without body
-        await _streamService.SendHeader(networkStream, _serverName);
+        await _streamService.SendHeader(networkStream, _serverName, HttpStatusCode.OK);
     }
 
     async Task ProcessPOST(RequestStruct request, NetworkStream networkStream)
     {
-        byte[] buffer = new byte[networkStream.Length];
-        var test = networkStream.Read(buffer, 0, buffer.Length);
-        //String message = Encoding.ASCII.GetString(headerBuffer, 0, headerBuffer.Length);
+        //  Parse body
+        List<Product>? products = _jsonBodyParser.ParseProducts(request.JsonBody);
+
+        if (products is null)
+        {
+            await _streamService.SendHeader(networkStream, _serverName, HttpStatusCode.NoContent);
+            return;
+        }
+
+        _dbService.AddRange(products);
+        await _dbService.SaveChangesAsync();
+
+        await _streamService.SendHeader(networkStream, _serverName, HttpStatusCode.OK);
     }
 
-    async Task ProcessRequest(RequestStruct request, NetworkStream networkStream)
+    async Task ProcessPUT(RequestStruct request, NetworkStream networkStream)
+    {
+        //  Parse body
+        List<Product>? products = _jsonBodyParser.ParseProducts(request.JsonBody);
+
+        if (products is null)
+        {
+            await _streamService.SendHeader(networkStream, _serverName, HttpStatusCode.NoContent);
+            return;
+        }
+
+        foreach (Product product in products)
+        {
+            if (product is null)
+                continue;
+
+            Product? exisitingProduct = _dbService.Products.FirstOrDefault(x => x.Id == product.Id);
+
+            if (exisitingProduct is null)
+                continue;
+
+            exisitingProduct = product;
+        }
+
+        await _dbService.SaveChangesAsync();
+        await _streamService.SendHeader(networkStream, _serverName, HttpStatusCode.OK);
+    }
+
+    async Task ManageRequestMethod(RequestStruct request, NetworkStream networkStream)
     {
         switch (request.HttpMethod)
         {
@@ -79,7 +124,13 @@ public class ClientHandler
                 await ProcessPOST(request, networkStream);
                 break;
 
+            case "PUT":
+                await ProcessPUT(request, networkStream);
+                break;
+
             default: throw new NotImplementedException("HTTP Method not implemented.");
         }
+
+        networkStream.Close();
     }
 }

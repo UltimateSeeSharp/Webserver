@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System.Collections;
 using System.Diagnostics.CodeAnalysis;
+using System.Net;
 using System.Text;
 using Webserver.Model;
 
@@ -54,21 +55,16 @@ internal class HeaderService
             requestStruct.Headers.Add(key, value);
         }
 
-        //  Save each json in body
-        foreach (var bodyItem in requestLines.Skip(headerBodySeperationIndex + 1).ToList())
-        {
-            var test = bodyItem;
-            var anonym = JsonConvert.DeserializeObject(test);
-            Product product = JsonConvert.DeserializeObject<Product>(test);
-        }
+        //  Save json in body
+        requestStruct.JsonBody = requestLines.Skip(headerBodySeperationIndex + 1).First();
 
         return requestStruct;
     }
 
-    internal string CreateResponseHeader(string serverName)
+    internal string CreateResponseHeader(string serverName, HttpStatusCode statusCode)
     {
         ResponseStruct response = new();
-        response.StatusCode = 200;
+        response.StatusCode = (int)statusCode;
         response.HttpVersion = "HTTP/1.1";
         response.HeaderEntries = new();
         response.HeaderEntries.Add("Server", serverName);

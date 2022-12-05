@@ -2,6 +2,7 @@
 
 using Autofac;
 using Autofac.Core;
+using Microsoft.EntityFrameworkCore;
 using Webserver.Extentions;
 
 namespace Webserver;
@@ -18,6 +19,14 @@ internal static class Bootstrapper
 
         builder.RegisterType<StreamService>();
         builder.RegisterType<HeaderService>();
+        builder.RegisterType<BodyParserService>();
+
+        builder.Register(c =>
+        {
+            DbContextOptionsBuilder optionsBuilder = new();
+            optionsBuilder.UseInMemoryDatabase("ProductsDB");
+            return new DbService(optionsBuilder.Options);
+        });
 
         _container = builder.Build();
     });

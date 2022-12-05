@@ -12,5 +12,5 @@ internal struct RequestStruct
     //  Saves all header items like compression-type, age, ...
     public Hashtable Headers;
 
-    public string[] Jsons;
+    public string JsonBody;
 }
